@@ -17,9 +17,12 @@ app.get('/',function(req, res){
 });
 
 app.post("/",function(req, res){
-    var msg = JSON.stringify(req.body)
+    var msg = req.body
     console.log(msg)
-    res.send(msg);
+    var respondObj = {
+      "pong" : msg.ping
+    }
+    res.status(200).send(respondObj);
 });
 
 //enable port

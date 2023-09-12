@@ -5,7 +5,11 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "pm2 start server.js --name metriport-app --log metriport.log",
+    "logs": "pm2 logs",
+    "stop": "pm2 stop metriport-app",
+    "restart": "pm2 restart metriport-app"
+
   },
   "repository": {
     "type": "git",

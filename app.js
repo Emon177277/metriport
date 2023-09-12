@@ -18,7 +18,7 @@ app.get('/',function(req, res){
 
 app.post("/",function(req, res){
     var msg = req.body
-    console.log(msg)
+    console.log(JSON.stringify(msg))
     var respondObj = {
       "pong" : msg.ping
     }

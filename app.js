@@ -49,9 +49,7 @@ const metriportClient = new MetriportDevicesApi("Q1ZsV2dCUW9fSFdGenF1aHhjTW8zOjl
     1. Genaral get function for testing server availability status
 */
 app.get('/',async function(req, res){
-  res.json({
-      "msg" : "The Get API is Working fine"
-  });
+  res.sendFile(path.join(__dirname, './public/home.html'));
 });
 
 /*

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/0.7.7/chartjs-plugin-zoom.min.js"></script>
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Metriport Report</title>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h2>Fill up the form</h2>
+        <form id="chartForm">
+
+            <div class="form-group">
+                <label for="userSelect">Select a User:</label>
+                <select class="form-control" id="userSelect">
+                    <option value="">Select a user...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="biometricInfo">Select a Biometric Option:</label>
+                <select class="form-control" id="biometricInfo">
+                    <option value="">Select a Biometric Option...</option>
+                    <option value="heartRate">Heart Rate</option>
+                    <option value="respirationRate">Respiration Rate</option>
+                    <option value="temperature">Temperature</option>
+                    <option value="bloodGlucose">Blood Glucose</option>
+                </select>
+            </div>
+
+
+            <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate">
+                </div>
+
+
+                <div class="col-sm-6">
+                    <label for="endDate">End Date:</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Show Chart</button>
+        </form>
+        <div class="toast" id="toastMessage" data-autohide="true" data-delay="3000">
+            <div class="toast-header">
+                <strong class="mr-auto" style="color: red;">Error!</strong>
+                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">
+                No data is found.
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4" id="chartContainer" style="display: none;">
+        <h2>Results</h2>
+        <div class="form-group row">
+            <div class="col-sm-6">
+                <label for="firstName" class="col-form-label">First Name:</label>
+                <input type="text" class="form-control" id="firstNameInSideChart" name="firstName" readonly>
+            </div>
+            <div class="col-sm-6">
+                <label for="lastName" class="col-form-label">Last Name:</label>
+                <input type="text" class="form-control" id="lastNameInSideChart" name="lastName" readonly>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Select Datasets:</label>
+            <input type="radio" name="datasetVisibility" value="daily" id="daily" checked> <label
+                for="daily">Daily</label>
+            <input type="radio" name="datasetVisibility" value="weekly" id="weekly"> <label for="weekly">Weekly</label>
+            <input type="radio" name="datasetVisibility" value="monthly" id="monthly"> <label
+                for="monthly">Monthly</label>
+        </div>
+        <canvas id="myChart" style="width:100%;max-width:800px"></canvas>
+    </div>
+
+    <script>
+        const userSelect = document.getElementById('userSelect');
+        fetch('http://ec2-3-133-12-188.us-east-2.compute.amazonaws.com:8080/user')
+            .then(response => response.json())
+            .then(users => {
+                console.log("user: ", users);
+                users.forEach(user => {
+                    console.log("for loop: ", user._id, user.firstName);
+                    const option = document.createElement('option');
+                    option.value = user._id;
+                    option.text = user.firstName;
+                    userSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+            });
+        const chartForm = document.getElementById('chartForm');
+        let selectedInterval = 'daily';
+        let postData = null;
+        let groupData = null;
+        let intervalMap = {
+            daily: 1,
+            weekly: 7,
+            monthly: 30
+        }
+
+        // Add event listeners for radio buttons to update the selected interval
+        document.querySelectorAll('input[name="datasetVisibility"]').forEach(input => {
+            input.addEventListener('change', function () {
+                selectedInterval = this.value;
+                //myChart.destroy();
+                generateChart(groupData, postData, intervalMap[selectedInterval]);
+            });
+        });
+        chartForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            postData = {
+                user: document.getElementById('userSelect').value,
+                biometric: document.getElementById('biometricInfo').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value
+            };
+            console.log("submit button is clicked: ", postData);
+            let postUrl = 'http://ec2-3-133-12-188.us-east-2.compute.amazonaws.com:8080/'
+
+            let restUrl = "?user_id=" + postData.user +
+                "&startDate=" + postData.startDate +
+                "&endDate=" + postData.endDate;
+
+
+            if (postData.biometric == "heartRate") {
+                postUrl = postUrl + "heart-rate" + restUrl;
+            }
+            else if (postData.biometric == "respirationRate") {
+                postUrl = postUrl + "respiration-rate" + restUrl;
+            }
+            else if (postData.biometric == "temperature") {
+                postUrl = postUrl + "temparature" + restUrl;
+            }
+            else if (postData.biometric == "bloodGlucose") {
+                postUrl = postUrl + "glucose" + restUrl;
+            }
+            let firstNameInSideChart = document.getElementById('firstNameInSideChart');
+            let lastNameInSideChart = document.getElementById('lastNameInSideChart');
+            fetch(postUrl)
+                .then(response => response.json())
+
+                .then(data => {
+                    const chartContainer = document.getElementById('chartContainer');
+                    if (data.chartDataResult.length) {
+                        chartContainer.style.display = 'block';
+                        firstNameInSideChart.value = data.userInfo.firstName;
+                        lastNameInSideChart.value = data.userInfo.last_name;
+                        console.log("inside: ", selectedInterval);
+                        groupData = data.chartDataResult;
+
+                        generateChart(data.chartDataResult, postData, intervalMap[selectedInterval]);
+                    }
+                    else {
+                        chartContainer.style.display = 'none';
+                        const toast = new bootstrap.Toast(toastMessage);
+                        toast.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending POST request:', error);
+                });
+
+        });
+        function generateChart(fetchedData, postData, selectedInterval) {
+            let modifiedDate = [];
+            let cnt = 0;
+            for (let i = 0; i < fetchedData[0].dates.length; i += selectedInterval) {
+                modifiedDate[cnt++] = fetchedData[0].dates[i];
+            }
+
+            const xValues = modifiedDate;
+            let datasets = [];
+            let legendText = "";
+            const lineColors = ["red", "green", "blue", "orange"];
+
+            if (postData.biometric == "heartRate") {
+                datasets = generateDatasetHeartRate(fetchedData, lineColors, selectedInterval);
+                legendText = "Heart Rate";
+            }
+            else if (postData.biometric == "respirationRate") {
+                datasets = generateDatasetRespirationRate(fetchedData, lineColors, selectedInterval);
+                legendText = "Respiration Rate";
+            }
+            else if (postData.biometric == "temperature") {
+                datasets = generateDatasetTemperature(fetchedData, lineColors, selectedInterval);
+                legendText = "Temperature";
+            }
+            else if (postData.biometric == "bloodGlucose") {
+                datasets = generateDatasetGlucose(fetchedData, lineColors, selectedInterval);
+                legendText = "Blood Glucose";
+            }
+
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xValues,
+                    datasets: datasets
+                },
+                options: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: legendText
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'xy',
+                    },
+                    zoom: {
+                        enabled: true,
+                        mode: 'xy',
+                        sensitivity: 3,
+                        minZoom: 0.1,
+                        maxZoom: 10,
+                    }
+                }
+            });
+        }
+
+        function generateDatasetHeartRate(fetchedData, lineColors, selectedInterval) {
+            const datasets = [];
+
+            for (let i = 0; i < fetchedData.length; i++) {
+                let modifiedData = [];
+                let cnt = 0;
+                for (let j = 0; j < fetchedData[i].heartRate.length; j += selectedInterval) {
+                    modifiedData[cnt++] = fetchedData[i].heartRate[j];
+                }
+                const dataset = {
+                    data: modifiedData,
+                    label: fetchedData[i].source,
+                    borderColor: lineColors[i],
+                    backgroundColor: lineColors[i],
+                    fill: false
+                };
+                datasets.push(dataset);
+            }
+            return datasets;
+        }
+
+        function generateDatasetRespirationRate(fetchedData, lineColors, selectedInterval) {
+            const datasets = [];
+            for (let i = 0; i < fetchedData.length; i++) {
+                let modifiedData = [];
+                let cnt = 0;
+                for (let j = 0; j < fetchedData[i].avg_resperationRate.length; j += selectedInterval) {
+                    modifiedData[cnt++] = fetchedData[i].avg_resperationRate[j];
+                }
+                const dataset = {
+                    data: modifiedData,
+                    label: fetchedData[i].source,
+                    borderColor: lineColors[i],
+                    backgroundColor: lineColors[i],
+                    fill: false
+                };
+                datasets.push(dataset);
+            }
+            return datasets;
+        }
+
+        function generateDatasetTemperature(fetchedData, lineColors, selectedInterval) {
+            const datasets = [];
+            for (let i = 0; i < fetchedData.length; i++) {
+                let modifiedData = [];
+                let cnt = 0;
+                for (let j = 0; j < fetchedData[i].avg_temparature.length; j += selectedInterval) {
+                    modifiedData[cnt++] = fetchedData[i].avg_temparature[j];
+                }
+                const dataset = {
+                    data: modifiedData,
+                    label: fetchedData[i].source,
+                    borderColor: lineColors[i],
+                    backgroundColor: lineColors[i],
+                    fill: false
+                };
+                datasets.push(dataset);
+            }
+            return datasets;
+        }
+
+        function generateDatasetGlucose(fetchedData, lineColors, selectedInterval) {
+            const datasets = [];
+            for (let i = 0; i < fetchedData.length; i++) {
+                let modifiedData = [];
+                let cnt = 0;
+                for (let j = 0; j < fetchedData[i].avg_blood_glucose.length; j += selectedInterval) {
+                    modifiedData[cnt++] = fetchedData[i].avg_blood_glucose[j];
+                }
+                const dataset = {
+                    data: modifiedData,
+                    label: fetchedData[i].source,
+                    borderColor: lineColors[i],
+                    backgroundColor: lineColors[i],
+                    fill: false
+                };
+                datasets.push(dataset);
+            }
+            return datasets;
+        }
+
+    </script>
+</body>
+
+</html>

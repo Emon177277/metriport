@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/0.7.7/chartjs-plugin-zoom.min.js"></script>
+
+
+
+<head class="container mt-4">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../style/style.css">
+    <title>Metriport Report</title>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <img src="file:///home/imtiaz-riton/Downloads/logo.jpeg" alt="Company Logo" width="120" height="50">
+            </div>
+            <div class="col-md-10">
+                <h4>Remote Patient Monitoring</h2>
+            </div>
+        </div>
+
+        <form id="chartForm">
+
+            <div class="form-group">
+                <label for="userSelect">Select a Patient:</label>
+                <select class="form-control" id="userSelect">
+                    <option value="">Select a Patient...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="deviceInfo">Select a Device :</label>
+                <select class="form-control" id="deviceInfo">
+                    <option value="">Select a Device ...</option>
+                    <option value="google">Google</option>
+                    <option value="fitbit">Fitbit</option>
+                </select>
+            </div>
+
+
+            <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate">
+                </div>
+
+
+                <div class="col-sm-6">
+                    <label for="endDate">End Date:</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Show Chart</button>
+        </form>
+        <div class="toast" id="toastMessage" data-autohide="true" data-delay="3000">
+            <div class="toast-header">
+                <strong class="mr-auto" style="color: red;">Error!</strong>
+                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">
+                No data is found.
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4" id="chartContainer" style="display: none;">
+        <h2>Results</h2>
+        <div class="form-group row">
+            <div class="col-sm-6">
+                <label for="firstName" class="col-form-label">First Name:</label>
+                <input type="text" class="form-control" id="firstNameInSideChart" name="firstName" readonly>
+            </div>
+            <div class="col-sm-6">
+                <label for="lastName" class="col-form-label">Last Name:</label>
+                <input type="text" class="form-control" id="lastNameInSideChart" name="lastName" readonly>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Select Datasets:</label>
+            <input type="radio" name="datasetVisibility" value="daily" id="daily" checked> <label
+                for="daily">Daily</label>
+            <input type="radio" name="datasetVisibility" value="weekly" id="weekly"> <label for="weekly">Weekly</label>
+            <input type="radio" name="datasetVisibility" value="monthly" id="monthly"> <label
+                for="monthly">Monthly</label>
+        </div>
+        <div class="grid-container">
+            <div class="grid-item">
+                <canvas id="myChartHearRate"></canvas>
+            </div>
+            <div class="grid-item">
+                <canvas id="myChartRespiration"></canvas>
+            </div>
+            <div class="grid-item">
+                <canvas id="myChartTemperature"></canvas>
+            </div>
+            <div class="grid-item">
+                <canvas id="myChartGlucose"></canvas>
+            </div>
+        </div>
+        <canvas id="myChartPair" style="width:100%;max-width:800px"></canvas>
+
+    </div>
+
+
+</body>
+
+<script src="../js/script.js"></script>
+
+</html>

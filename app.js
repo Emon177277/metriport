@@ -18,6 +18,7 @@ app.use(bodyParser.urlencoded({
     extended: true
   }));
 app.use(bodyParser.json());
+app.use(express.static('./metriport_fronend'));
 app.use(cors());
 
 
@@ -49,7 +50,7 @@ const metriportClient = new MetriportDevicesApi("Q1ZsV2dCUW9fSFdGenF1aHhjTW8zOjl
     1. Genaral get function for testing server availability status
 */
 app.get('/',async function(req, res){
-  res.sendFile(path.join(__dirname, './public/home.html'));
+  res.sendFile(path.join(__dirname, './metriport_fronend/html/home.html'));
 });
 
 /*

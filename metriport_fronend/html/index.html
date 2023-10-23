@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/0.7.7/chartjs-plugin-zoom.min.js"></script>
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Allevia Usage</title>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h3>Allevia Usage: CMC</h3>
+        <form id="report" class="form-inline">
+            <div class="form-group mb-2">
+                <label for="noteSent">Note Sent: </label>
+                <select class="form-control" id="noteSent">
+                    <option value="">Select a Option...</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="form-group mx-sm-3 mb-2">
+                <label for="appointmentDate">Appointment Date: </label>
+                <input type="date" class="form-control" id="appointmentDate" name="appointmentDate">
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Filter</button>
+
+            <button type="submit" class="btn btn-secondary mb-2">Reset</button>
+        </form>
+
+        <table class="table table-striped" id="data-table">
+            <thead>
+                <tr>
+                    <th scope="col">Clinic Appointment Id</th>
+                    <th scope="col">Appointment Date</th>
+                    <th scope="col">Appointment Reason</th>
+                    <th scope="col">Form Stage</th>
+                    <th scope="col">Note Sent</th>
+                    <th scope="col">Error</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Last Modified</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // var apiLocalUrl = "http://localhost/services/api/report";
+        var apiUrl = "https://cmc.allevia.md/services/api/report";
+        let appointmentData = null;
+        $(document).ready(function () {
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                contentType: 'application/json',
+                success: function (data) {
+                    appointmentData = modifiyDate(data['CMC']);
+                    populateTable(appointmentData);
+                },
+                error: function (error) {
+                    console.error('Error:', error);
+                }
+            }).done(function (response) {
+                console.log(response);
+            });
+        });
+
+        function populateTable(data) {
+            data.forEach(function (item) {
+                $('#data-table tbody').append(`
+                    <tr>
+                        <td>${item.clinicAppointmentId}</td>
+                        <td>${item.appointmentDate}</td>
+                        <td>${item.appointmentReason}</td>
+                        <td>${item.formStage}</td>
+                        <td>${item.noteSent}</td>
+                        <td>${item.error}</td>
+                        <td>${item.created}</td>
+                        <td>${item.lastModified}</td>
+                    </tr>
+                `);
+            });
+        }
+        function modifiyDate(data) {
+            data.forEach(function (item) {
+                item.appointmentDate = convertToDate(item.appointmentDate);
+                item.created = convertToDate(item.created);
+                item.lastModified = convertToDate(item.lastModified);
+            })
+            return data;
+        }
+        function convertToDate(dateTime) {
+            const dateTimeString = dateTime;
+            const date = new Date(dateTimeString);
+
+            // Extract the date
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // Months are zero-based, so add 1
+            const day = date.getDate();
+
+            // Create a formatted date string (e.g., "2023-08-11")
+            const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            return formattedDate;
+        }
+        document.querySelector("#report .btn-secondary").addEventListener('click', function (event) {
+            event.preventDefault();
+
+            // Reset the form to its initial state
+            document.querySelector("#report").reset();
+
+            // You can also trigger the filter action after resetting if needed
+            $('#data-table tbody').empty();
+            populateTable(appointmentData);
+        });
+        report.addEventListener('submit', function (event) {
+            event.preventDefault();
+            formData = {
+                noteSent: document.getElementById('noteSent').value,
+                appointmentDate: document.getElementById('appointmentDate').value
+            };
+            //console.log("submitted data: ", formData);
+            let modifiedData = [];
+            if (formData.noteSent === "" && formData.appointmentDate === "") {
+                // $('#data-table tbody').empty();
+                // populateTable(modifiedData);
+                // console.log("empty 2");
+            }
+            else if (formData.noteSent !== "" && formData.appointmentDate !== "") {
+                for (let i = 0; i < appointmentData.length; i++) {
+                    if (appointmentData[i].noteSent === formData.noteSent && convertToDate(appointmentData[i].appointmentDate) === formData.appointmentDate) modifiedData.push(appointmentData[i]);
+                }
+                $('#data-table tbody').empty();
+                populateTable(modifiedData);
+                //console.log("none emtpy");
+            }
+            else {
+                //console.log("empty 1");
+                for (let i = 0; i < appointmentData.length; i++) {
+                    if (formData.noteSent !== "") {
+                        if (appointmentData[i].noteSent === formData.noteSent) modifiedData.push(appointmentData[i]);
+                    }
+                    else {
+                        if (convertToDate(appointmentData[i].appointmentDate) === formData.appointmentDate) modifiedData.push(appointmentData[i]);
+                    }
+                }
+                $('#data-table tbody').empty();
+                populateTable(modifiedData);
+            }
+
+            //console.log("modiefied data: ", modifiedData);
+
+        });
+    </script>
+</body>
+
+</html>

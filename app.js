@@ -53,6 +53,10 @@ app.get('/',async function(req, res){
   res.sendFile(path.join(__dirname, './metriport_fronend/html/home.html'));
 });
 
+app.get('/alivia-usage-demo',async function(req, res){
+  res.sendFile(path.join(__dirname, './metriport_fronend/html/index.html'));
+});
+
 /*
   2. Metriport Webhook
 */

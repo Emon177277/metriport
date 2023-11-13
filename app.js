@@ -37,8 +37,8 @@ connect();
 
 // ================================ METRIPORT-SDK ===========================================
 
-const metriportClient = new MetriportDevicesApi("Q1ZsV2dCUW9fSFdGenF1aHhjTW8zOjllZWY2M2ZmLTJlNjAtNGNiMS05OGIzLTY1NzhhOTQ2ODBkMg", {
-  sandbox: true, // set to true to use the sandbox environment
+const metriportClient = new MetriportDevicesApi("Z295a0NZMUJpUkFybHlpVmgyZW9pOjllZWY2M2ZmLTJlNjAtNGNiMS05OGIzLTY1NzhhOTQ2ODBkMg", {
+  sandbox: false, // set to true to use the sandbox environment
 });
 
 
@@ -110,7 +110,7 @@ app.post("/connectToken", async function(req, res){
 
     const tokenId = await metriportClient.getConnectToken(metriportid);
 
-    res.status(200).send({widgetLink: `https://connect.metriport.com/?token=${tokenId}&sandbox=true`});
+    res.status(200).send({widgetLink: `https://connect.metriport.com/?token=${tokenId}&sandbox=false`});
 });
 
 /*
